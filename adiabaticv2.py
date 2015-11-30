@@ -5,7 +5,7 @@ import scipy
 import networkx as nx
 import time
 script, filename1, filename2 = argv
-print("usage: python rwmc.py info_file distribution_file")
+print("usage: python adiabaticv2.py info_file distribution_file")
 infofile = open(filename1, 'w') # writing file
 infofile.truncate()
 distfile = open(filename2, 'w')  # writing file
