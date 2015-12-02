@@ -4,7 +4,6 @@ import random
 import numpy
 import argparse
 import walker
-import copy
 import csv
 
 
@@ -12,9 +11,9 @@ import csv
 parser = argparse.ArgumentParser(description='Walk with killing.')
 parser.add_argument('infofile',  metavar='infofile',  nargs='?',  help='output file 1',  default='info')
 parser.add_argument('distfile',  metavar='distfile',  nargs='?',  help='output file 2',  default='dist')
-parser.add_argument('-T', metavar='T',  nargs='?',  type=int,  help='total runtime', default=10)
-parser.add_argument('-s', metavar='s',  nargs='?', type=int,  help='number of discretization steps', default=100)
-parser.add_argument('-w', metavar='w',  nargs='?', type=int,  help='total number of walkers', default=10)
+parser.add_argument('-T', metavar='T',  nargs='?',  type=int,  help='total runtime', default=100)
+parser.add_argument('-s', metavar='s',  nargs='?', type=float,  help='discretization size', default=.3)
+parser.add_argument('-w', metavar='w',  nargs='?', type=int,  help='total number of walkers', default=100)
 parser.add_argument('-d', metavar='d',  nargs='?', type=int,  help='dimension of hypercube graph', default=10)
 args=parser.parse_args()
 
@@ -27,15 +26,12 @@ distfile = open(args.distfile, 'w')  # writing file
 distfile.truncate()
 ##################### Parameters
 n=args.d # dimension of hypercube
-T=(n**2)
-deltaT=1/float(3)
+T=args.T
+initialwalkernum=args.w # initial number of walkers should be logarithmic in the number of verticesu
+deltaT=args.s
 timesteps=int(T/deltaT) # number of steps
-if (T/timesteps > 1): 
-    print("badness")
-    sys.exit()
 
 vertexnumber=int(2**n) # for hypercube
-initialwalkernum=n**2 # initial number of walkers should be logarithmic in the number of vertices
 ##################### Use NetworkX to generate a hypercube; generate various dictionaries with the output
        
 def revive( walkerList ):
