@@ -25,10 +25,10 @@ class Walker:
         return gmpy.popcount(self.vertex)
     
     def potential(self):
-        return gmpy.popcount(self.vertex)/float(self.dimension)
-#        if (self.hammingWeight() != 2):
-#            return gmpy.popcount(self.vertex)/float(self.dimension)
-#        return float(1/math.sqrt(self.dimension))
+#        return gmpy.popcount(self.vertex)/float(self.dimension)
+        if (self.hammingWeight() != 2):
+            return gmpy.popcount(self.vertex)/float(self.dimension)
+        return float(1/math.sqrt(self.dimension))
         
     def spawn(self):
         return copy.copy(self)

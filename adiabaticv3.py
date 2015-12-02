@@ -15,6 +15,8 @@ parser.add_argument('-T', metavar='T',  nargs='?',  type=int,  help='total runti
 parser.add_argument('-s', metavar='s',  nargs='?', type=float,  help='discretization size', default=.3)
 parser.add_argument('-w', metavar='w',  nargs='?', type=int,  help='total number of walkers', default=100)
 parser.add_argument('-d', metavar='d',  nargs='?', type=int,  help='dimension of hypercube graph', default=10)
+parser.add_argument('--spike_size', metavar="spike_size",  nargs='?', type=float, help='introduce a spike of height spike_size',  default=0)
+parser.add_argument('--spike_loc', metavar="spike_loc",  nargs='?', type=int, help='place spike at hamming weight spike_loc',  default=2)
 args=parser.parse_args()
 
 #script, filename1, filename2 = argv
