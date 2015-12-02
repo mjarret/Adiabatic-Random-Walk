@@ -46,7 +46,7 @@ binList = list(range(n+1))
 def histogram( walkerList ):
     histoList = list()
     for w in walkerList:
-        histoList.append(w.potential())
+        histoList.append(w.hammingWeight())
     return numpy.histogram(histoList, bins=binList, density=False)
     
 survivors=list()
