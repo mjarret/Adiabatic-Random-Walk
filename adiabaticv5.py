@@ -30,10 +30,9 @@ dir = 'out/%s/%s/%s/' % (n, spike_loc, spike_size)
 if not os.path.exists(dir):
     os.makedirs(dir)
 outfile = '%s/%s' % (dir, args.infofile)    
-infofile = open(outfile, 'w+') # writing file
-infofile.truncate()
-distfile = open(args.distfile, 'w')  # writing file
-distfile.truncate()
+infofile = open(outfile, 'a+') # writing file
+#distfile = open(args.distfile, 'w')  # writing file
+#distfile.truncate()
 
 initialwalkernum=args.w # initial number of walkers should be logarithmic in the number of verticesu
 deltaT=args.s
