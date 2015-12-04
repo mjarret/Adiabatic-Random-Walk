@@ -5,18 +5,19 @@ import numpy
 import argparse
 import walker
 import csv
+import gmpy
 
 
 # Some parsers for command line options
 parser = argparse.ArgumentParser(description='Walk with killing.')
-parser.add_argument('infofile',  metavar='infofile',  nargs='?',  help='output file 1',  default='info')
+parser.add_argument('infofile',  metavar='infofile',  nargs='?',  help='output file 1',  default='info.csv')
 parser.add_argument('distfile',  metavar='distfile',  nargs='?',  help='output file 2',  default='dist')
 parser.add_argument('-T', metavar='T',  nargs='?',  type=int,  help='total runtime', default=100)
 parser.add_argument('-s', metavar='s',  nargs='?', type=float,  help='discretization size', default=.3)
 parser.add_argument('-w', metavar='w',  nargs='?', type=int,  help='total number of walkers', default=100)
 parser.add_argument('-d', metavar='d',  nargs='?', type=int,  help='dimension of hypercube graph', default=10)
-parser.add_argument('--spike_size', metavar="spike_size",  nargs='?', type=float, help='introduce a spike of height spike_size (not yet implemented)',  default=0)
-parser.add_argument('--spike_loc', metavar="spike_loc",  nargs='?', type=int, help='place spike at hamming weight spike_loc (not yet implemented)',  default=2)
+parser.add_argument('--spike_size', metavar="spike_size",  nargs='?', type=float, help='introduce a spike of height spike_size',  default=0)
+parser.add_argument('--spike_loc', metavar="spike_loc",  nargs='?', type=int, help='place spike at hamming weight spike_loc',  default=0)
 args=parser.parse_args()
 #print("usage: python adiabaticv2.py info_file distribution_file")
 infofile = open(args.infofile, 'w') # writing file
@@ -29,27 +30,26 @@ deltaT=args.s
 vertexnumber=int(2**n) # for hypercube
 writer = csv.writer(infofile)
 
+spike_size = args.spike_size
+spike_loc = args.spike_loc
+
 def main():
     #script, filename1, filename2 = argv
     T = args.T
-    success_prob = 0.000
-    results = list()
-    while(success_prob < 1):
-        success_prob = 0.000
-        success_prob_old = 0.000
+ #   results = list()
+    for time_counter in range(10):
         w=args.w
-        while(success_prob - success_prob_old >= 0 and w < n**3):
-            success_prob_old = success_prob
-            success_prob = 0
-            trials = 1
+        while(w < 10*(n**2)):
+            trials = 5
             tmp = list()
             for i in range(trials):
-                tmp.append(test(T, w))
-            success_prob = numpy.mean(tmp,  axis=0)
-            results.append(success_prob)
-            print(T, w, success_prob)
+                tmp.append(test(n, T, w))
+            tmp[:0] = (n, T, w, spike_loc, spike_size)
+            writer.writerow(tmp)
+            print(tmp)
             w = 2*w
         T = 2*T
+        
     
     
 ##################### Use NetworkX to generate a hypercube; generate various dictionaries with the output
@@ -80,7 +80,7 @@ def adiabaticWalk(total_walkers, total_vertices, time):
     for t in range(timesteps): # random walk loop
         s=t/float(timesteps) # adiabatic scheduling parameter
     
-        writer.writerow((histogram(walkers)[0]))
+    #    writer.writerow((histogram(walkers)[0]))
         distfile.write(" %s \n" % (histogram(walkers)[0]))
     
 #        if s > percentDone:
@@ -96,7 +96,7 @@ def diffuse(prior, s):
     for w in prior:
             
         probedge= (1-s)*deltaT
-        probdead= w.potential()*deltaT*s
+        probdead= potential(w.vertex)*deltaT*s
         probstay = 1- probdead - probedge
         
         randprob=random.random()        
@@ -117,13 +117,14 @@ def test(time,  num_walkers):
         if w.vertex == 0:
             hit += 1
     return hit/float(num_walkers)
+
+def hammingWeight(vertex):
+        return gmpy.popcount(vertex)
         
-
-
-#    r = random.choice(adiabaticWalk(num_walkers,n, time))
-#    if r.vertex==0:
-#        return 1
-#    return 0     
+def potential(vertex):
+    h=hammingWeight(vertex)
+    if (h == spike_loc): return spike_size/float(n)
+    return h/float(n)
 
 if __name__ == "__main__":
     sys.exit(main())
