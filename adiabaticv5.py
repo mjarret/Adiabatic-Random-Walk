@@ -43,7 +43,7 @@ def main():
             trials = 5
             tmp = list()
             for i in range(trials):
-                tmp.append(test(n, T, w))
+                tmp.append(test(T, w))
             tmp[:0] = (n, T, w, spike_loc, spike_size)
             writer.writerow(tmp)
             print(tmp)
