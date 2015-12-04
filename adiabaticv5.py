@@ -32,19 +32,22 @@ writer = csv.writer(infofile)
 def main():
     #script, filename1, filename2 = argv
     T = args.T
-    success_prob = 0
+    success_prob = 0.000
     results = list()
-    while(success_prob < 100 and T < n**3):
-        success_prob = 0
-        success_prob_old = 0
-        w=2
+    while(success_prob < 1):
+        success_prob = 0.000
+        success_prob_old = 0.000
+        w=args.w
         while(success_prob - success_prob_old >= 0 and w < n**3):
             success_prob_old = success_prob
             success_prob = 0
-            for i in range(100):
-                 success_prob += test(T, w)
-            print((T, w, success_prob))
+            trials = 1
+            tmp = list()
+            for i in range(trials):
+                tmp.append(test(T, w))
+            success_prob = numpy.mean(tmp,  axis=0)
             results.append(success_prob)
+            print(T, w, success_prob)
             w = 2*w
         T = 2*T
     
@@ -107,13 +110,20 @@ def diffuse(prior, s):
             survivors.append(random.choice(prior).spawn())
     return survivors 
 
-def test(time,  num_walkers):
-    r = random.choice(adiabaticWalk(num_walkers,n, time))
-    if r.vertex==0:
-        return 1
-    return 0 
+def test(time,  num_walkers):    
+    walkers = adiabaticWalk(num_walkers, n, time)
+    hit = 0
+    for w in walkers:
+        if w.vertex == 0:
+            hit += 1
+    return hit/float(num_walkers)
+        
 
-    
+
+#    r = random.choice(adiabaticWalk(num_walkers,n, time))
+#    if r.vertex==0:
+#        return 1
+#    return 0     
 
 if __name__ == "__main__":
     sys.exit(main())
