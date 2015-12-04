@@ -6,6 +6,7 @@ import argparse
 import walker
 import csv
 import gmpy
+import os
 
 
 # Some parsers for command line options
@@ -20,11 +21,20 @@ parser.add_argument('--spike_size', metavar="spike_size",  nargs='?', type=float
 parser.add_argument('--spike_loc', metavar="spike_loc",  nargs='?', type=int, help='place spike at hamming weight spike_loc',  default=0)
 args=parser.parse_args()
 #print("usage: python adiabaticv2.py info_file distribution_file")
-infofile = open(args.infofile, 'w') # writing file
+
+spike_size = args.spike_size
+spike_loc = args.spike_loc
+n=args.d # dimension of hypercube
+
+dir = 'out/%s/%s/%s/' % (n, spike_loc, spike_size)
+if not os.path.exists(dir):
+    os.makedirs(dir)
+outfile = '%s/%s' % (dir, args.infofile)    
+infofile = open(outfile, 'w+') # writing file
 infofile.truncate()
 distfile = open(args.distfile, 'w')  # writing file
 distfile.truncate()
-n=args.d # dimension of hypercube
+
 initialwalkernum=args.w # initial number of walkers should be logarithmic in the number of verticesu
 deltaT=args.s
 vertexnumber=int(2**n) # for hypercube
@@ -32,7 +42,11 @@ writer = csv.writer(infofile)
 
 spike_size = args.spike_size
 spike_loc = args.spike_loc
-
+dir = 'out/%s/%s/%s/' % (n, spike_loc, spike_size)
+if not os.path.exists(dir):
+    os.makedirs(dir)
+    
+    
 def main():
     #script, filename1, filename2 = argv
     T = args.T
