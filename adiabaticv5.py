@@ -42,8 +42,7 @@ def main():
         while(w < 10*(n**2)):
             trials = 5
             tmp = list()
-            for i in range(trials):
-                tmp.append(test(T, w))
+            tmp = [test(T, w) for i in range(trials)]
             tmp[:0] = (n, T, w, spike_loc, spike_size)
             writer.writerow(tmp)
             print(tmp)
@@ -65,23 +64,19 @@ def main():
 binList = list(range(n+1))
 def histogram( walkerList ):
     histoList = list()
-    for w in walkerList:
-        histoList.append(w.hammingWeight())
+    for w in walkerList: histoList.append(w.hammingWeight())
     return numpy.histogram(histoList, bins=binList, density=False)
 
 def adiabaticWalk(total_walkers, total_vertices, time):
     timesteps=int(time/deltaT)
 #    percentDone = 0.000
     walkers = list()
-    for j in range(total_walkers):           # randomize initial distribution
-        r = random.randrange(total_vertices)
-        walkers.append(walker.Walker(r, total_vertices)) #add a new walker
-
+    walkers = [walker.Walker(random.randrange(total_vertices), total_vertices)for j in range(total_walkers)]           # randomize initial distribution
     for t in range(timesteps): # random walk loop
         s=t/float(timesteps) # adiabatic scheduling parameter
     
     #    writer.writerow((histogram(walkers)[0]))
-        distfile.write(" %s \n" % (histogram(walkers)[0]))
+    #    distfile.write(" %s \n" % (histogram(walkers)[0]))
     
 #        if s > percentDone:
 #            sys.stdout.write("\r %s %% Complete" % (percentDone*100))
