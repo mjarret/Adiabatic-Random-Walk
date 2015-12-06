@@ -50,7 +50,7 @@ def main():
     #script, filename1, filename2 = argv
     T = args.T
  #   results = list()
-    for time_counter in range(10):
+    for time_counter in range(4):
         w=args.w
         while(w < 10*(n**2)):
             trials = 5
@@ -58,7 +58,7 @@ def main():
             tmp = [test(T, w) for i in range(trials)]
             tmp[:0] = (n, T, w, spike_loc, spike_size)
             writer.writerow(tmp)
-            print(tmp)
+#            print(tmp)
             w = 2*w
         T = 2*T
         
