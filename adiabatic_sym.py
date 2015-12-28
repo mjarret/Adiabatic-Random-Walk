@@ -8,7 +8,6 @@ import csv
 import gmpy
 import os
 
-
 # Some parsers for command line options
 parser = argparse.ArgumentParser(description='Walk with killing.')
 parser.add_argument('infofile',  metavar='infofile',  nargs='?',  help='output file 1',  default='info.csv')
@@ -19,6 +18,7 @@ parser.add_argument('-w', metavar='w',  nargs='?', type=int,  help='total number
 parser.add_argument('-d', metavar='d',  nargs='?', type=int,  help='dimension of hypercube graph', default=10)
 parser.add_argument('--spike_size', metavar="spike_size",  nargs='?', type=float, help='introduce a spike of height spike_size',  default=0)
 parser.add_argument('--spike_loc', metavar="spike_loc",  nargs='?', type=int, help='place spike at hamming weight spike_loc',  default=0)
+parser.add_argument('--post_select', metavar="post_select",  nargs='?',  type=bool,  help='condition on distribution after',  default = False)
 args=parser.parse_args()
 #print("usage: python adiabaticv2.py info_file distribution_file")
 
@@ -38,6 +38,12 @@ infofile = open(outfile, 'a+') # writing file
 distfile = open(distfile, 'w')  # writing file
 distfile.truncate()
 
+dim = args.w
+post_select = args.post_select
+
+currfile = open('out/curr.csv', 'a+')
+curr = csv.writer(currfile)
+
 initialwalkernum=args.w # initial number of walkers should be logarithmic in the number of verticesu
 deltaT=args.s
 vertexnumber=int(2**n) # for hypercube
@@ -55,6 +61,7 @@ def main():
         while(w < 10*(n**2)):
             tmp = list()
             tmp = [test(T, w) for i in range(trials)]
+            curr.writerow((n, T, w, spike_loc, spike_size,numpy.mean(tmp, dtype=numpy.float64), numpy.std(tmp, ddof=1, dtype=numpy.float64)))
             tmp[:0] = (n, T, w, spike_loc, spike_size)
             writer.writerow(tmp)
             w = 2*w
@@ -88,13 +95,13 @@ def adiabaticWalk(total_walkers, total_vertices, time):
     for t in range(timesteps): # random walk loop
         s=t/float(timesteps) # adiabatic scheduling parameter
         if(s - s_old > .001): 
-            print(s)
+#            print(s)
             output = [s]
             ll = histogram(walkers)[0].tolist()
             output.extend(ll)
             dist_writer.writerow(output)
             s_old += .001
-        before_diffusion = walkers
+ #       before_diffusion = walkers
         walkers = diffuse(walkers, s)
 #        if (len(walkers) < total_walkers/float(8)):
 #            while(len(walkers) < total_walkers): walkers.append(random.choice(before_diffusion).spawn())
@@ -102,8 +109,7 @@ def adiabaticWalk(total_walkers, total_vertices, time):
     
 
 def diffuse(prior, s):   
-    survivors = list()          
-    
+    survivors = list()       
     for w in prior:
             
         #probedge= (1-s)*deltaT
@@ -119,30 +125,17 @@ def diffuse(prior, s):
             survivors.append(w)
         elif(randprob <= probedge+probstay): 
             survivors.append(w)
+        elif(post_select):
+            pass
         else:
             survivors.append(random.choice(prior).spawn())
-#            pass
-
-        #probedge= (1-s)*deltaT
-        #probdead= potential(w.hw)*deltaT*s
-#        isDead = False
-#        for i in range(2):
-#            probedge = (1-s)
-#            probdead = s*potential(w.hw)
-#            probstay = 1- probdead - probedge
-#        
-#            randprob=random.random()        
-#        
-#            if(randprob<=probedge): 
-#                w.walk()
-#            elif(randprob <= probedge+probstay): 
-#                pass
-#            else:isDead = True
-#                
-#        if (isDead):        
-#            survivors.append(random.choice(prior).spawn())
-#        else:
-#            survivors.append(w)
+    
+    if (post_select):
+        ret = survivors
+        while(len(ret)<len(prior)):
+            ret.append(random.choice(survivors).spawn())
+        return ret
+        
     return survivors 
     
 
@@ -158,9 +151,14 @@ def hammingWeight(vertex):
         return gmpy.popcount(vertex)
         
 def potential(hamming_weight):
+#    h=hamming_weight
+#    if (h == spike_loc): return spike_size/float(n)
+#    return h/float(n)
     h=hamming_weight
-    if (h == spike_loc): return spike_size/float(n)
-    return h/float(n)
+    pot = h + numpy.log(n)*numpy.sin(h*numpy.pi*16/n)
+#    return pot/float(n)
+    return pot
+
 
 if __name__ == "__main__":
     sys.exit(main())
