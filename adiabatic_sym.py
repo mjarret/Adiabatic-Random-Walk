@@ -155,7 +155,7 @@ def potential(hamming_weight):
 #    if (h == spike_loc): return spike_size/float(n)
 #    return h/float(n)
     h=hamming_weight
-    pot = h + numpy.log(n)*numpy.sin(h*numpy.pi*16/n)
+    pot = h + numpy.log(n)*numpy.sin(h*numpy.pi*32/n)
 #    return pot/float(n)
     return pot
 
