@@ -12,7 +12,7 @@ import os
 # Some parsers for command line options
 parser = argparse.ArgumentParser(description='Walk with killing.')
 parser.add_argument('infofile',  metavar='infofile',  nargs='?',  help='output file 1',  default='info.csv')
-parser.add_argument('distfile',  metavar='distfile',  nargs='?',  help='output file 2',  default='dist')
+parser.add_argument('distfile',  metavar='distfile',  nargs='?',  help='output file 2',  default='dist.csv')
 parser.add_argument('-T', metavar='T',  nargs='?',  type=int,  help='total runtime', default=100)
 parser.add_argument('-s', metavar='s',  nargs='?', type=float,  help='discretization size', default=.3)
 parser.add_argument('-w', metavar='w',  nargs='?', type=int,  help='total number of walkers', default=100)
@@ -26,40 +26,39 @@ spike_size = args.spike_size
 spike_loc = args.spike_loc
 n=args.d # dimension of hypercube
 
+trials = 1
+time_range = 1
+
 dir = 'out/%s/%s/%s/' % (n, spike_loc, spike_size)
 if not os.path.exists(dir):
     os.makedirs(dir)
 outfile = '%s/%s' % (dir, args.infofile)    
+distfile = '%s/%s' % (dir, args.distfile)
 infofile = open(outfile, 'a+') # writing file
-#distfile = open(args.distfile, 'w')  # writing file
-#distfile.truncate()
+distfile = open(distfile, 'w')  # writing file
+distfile.truncate()
 
 initialwalkernum=args.w # initial number of walkers should be logarithmic in the number of verticesu
 deltaT=args.s
 vertexnumber=int(2**n) # for hypercube
+
 writer = csv.writer(infofile)
+dist_writer = csv.writer(distfile)
 
 spike_size = args.spike_size
 spike_loc = args.spike_loc
-dir = 'out/%s/%s/%s/' % (n, spike_loc, spike_size)
-if not os.path.exists(dir):
-    os.makedirs(dir)
-    
     
 def main():
-    #script, filename1, filename2 = argv
     T = args.T
- #   results = list()
-    for time_counter in range(4):
+    for time_counter in range(time_range):
         w=args.w
         while(w < 10*(n**2)):
-            trials = 5
             tmp = list()
             tmp = [test(T, w) for i in range(trials)]
             tmp[:0] = (n, T, w, spike_loc, spike_size)
             writer.writerow(tmp)
-#            print(tmp)
             w = 2*w
+            break
         T = 2*T
         
     
@@ -78,26 +77,26 @@ binList = list(range(n+1))
 def histogram( walkerList ):
     histoList = list()
     for w in walkerList: histoList.append(w.hammingWeight())
-    return numpy.histogram(histoList, bins=binList, density=False)
+    return numpy.histogram(histoList, bins=binList, density=True)
 
 def adiabaticWalk(total_walkers, total_vertices, time):
     timesteps=int(time/deltaT)
 #    percentDone = 0.000
     walkers = list()
-    walkers = [walker.Walker(random.randrange(total_vertices), total_vertices)for j in range(total_walkers)]           # randomize initial distribution
+    walkers = [walker.Walker(random.randrange(2**total_vertices), total_vertices) for j in range(total_walkers)]           # randomize initial distribution
+    s_old = 0.000
     for t in range(timesteps): # random walk loop
         s=t/float(timesteps) # adiabatic scheduling parameter
-    
-    #    writer.writerow((histogram(walkers)[0]))
-    #    distfile.write(" %s \n" % (histogram(walkers)[0]))
-    
-#        if s > percentDone:
-#            sys.stdout.write("\r %s %% Complete" % (percentDone*100))
-#            percentDone+=0.001
-#            sys.stdout.flush()
-
+        if(s - s_old > .001): 
+            print(s)
+            output = [s]
+            ll = histogram(walkers)[0].tolist()
+            output.extend(ll)
+            dist_writer.writerow(output)
+            s_old += .001
         walkers = diffuse(walkers, s)
     return walkers
+    
 
 def diffuse(prior, s):   
     survivors = list()          
@@ -117,6 +116,7 @@ def diffuse(prior, s):
         else:
             survivors.append(random.choice(prior).spawn())
     return survivors 
+    
 
 def test(time,  num_walkers):    
     walkers = adiabaticWalk(num_walkers, n, time)

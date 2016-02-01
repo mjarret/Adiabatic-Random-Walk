@@ -25,7 +25,7 @@ args=parser.parse_args()
 spike_size = args.spike_size
 spike_loc = args.spike_loc
 n=args.d # dimension of hypercube
-
+curr_min = 100000
 trials = 1
 time_range = 1
 
@@ -61,7 +61,7 @@ def main():
         while(w < 10*(n**2)):
             tmp = list()
             tmp = [test(T, w) for i in range(trials)]
-            curr.writerow((n, T, w, spike_loc, spike_size,numpy.mean(tmp, dtype=numpy.float64), numpy.std(tmp, ddof=1, dtype=numpy.float64)))
+            curr.writerow((n, T, w, spike_loc, spike_size,numpy.mean(tmp, dtype=numpy.float64)))
             tmp[:0] = (n, T, w, spike_loc, spike_size)
             writer.writerow(tmp)
             w = 2*w
@@ -115,7 +115,8 @@ def diffuse(prior, s):
         #probedge= (1-s)*deltaT
         #probdead= potential(w.hw)*deltaT*s
         probedge = (1-s)*deltaT
-        probdead = s*potential(w.hw)*deltaT
+        probdead = s*(potential(w.hw)-curr_min)*deltaT
+    #    probdead = s*potential(w.hw)*deltaT
         probstay = 1- probdead - probedge
         
         randprob=random.random()        
@@ -151,11 +152,13 @@ def hammingWeight(vertex):
         return gmpy.popcount(vertex)
         
 def potential(hamming_weight):
-#    h=hamming_weight
-#    if (h == spike_loc): return spike_size/float(n)
-#    return h/float(n)
+    global curr_min
     h=hamming_weight
-    pot = h + numpy.log(n)*numpy.sin(h*numpy.pi*32/n)
+    if (h == spike_loc): return spike_size/float(n)
+#    return h/float(n)
+#    pot = h + numpy.log(n)*numpy.sin(h*numpy.pi*32/n)
+    pot = h/float(n)
+    if (pot < curr_min): curr_min = pot
 #    return pot/float(n)
     return pot
 
