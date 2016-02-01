@@ -41,6 +41,8 @@ distfile.truncate()
 dim = args.w
 post_select = args.post_select
 
+tot_walkers = args.w
+
 currfile = open('out/curr.csv', 'a+')
 curr = csv.writer(currfile)
 
@@ -101,6 +103,7 @@ def adiabaticWalk(total_walkers, total_vertices, time):
             output.extend(ll)
             dist_writer.writerow(output)
             s_old += .001
+#            print(len(walkers))
  #       before_diffusion = walkers
         walkers = diffuse(walkers, s)
 #        if (len(walkers) < total_walkers/float(8)):
@@ -109,35 +112,26 @@ def adiabaticWalk(total_walkers, total_vertices, time):
     
 
 def diffuse(prior, s):   
-    survivors = list()       
-    for w in prior:
-            
-        #probedge= (1-s)*deltaT
-        #probdead= potential(w.hw)*deltaT*s
-        probedge = (1-s)*deltaT
-        probdead = s*(potential(w.hw)-curr_min)*deltaT
-    #    probdead = s*potential(w.hw)*deltaT
-        probstay = 1- probdead - probedge
+    survivors = list()  
+    while (len(survivors) < tot_walkers):
+        random.shuffle(prior)
+        for w in prior:
+            w = w.spawn()
+
+            probedge = (1-s)*deltaT
+            probdead = s*potential(w.hw)*deltaT
+            probstay = 1- probdead - probedge
         
-        randprob=random.random()        
+            randprob=random.random()        
         
-        if(randprob<=probedge): 
-            w.walk()
-            survivors.append(w)
-        elif(randprob <= probedge+probstay): 
-            survivors.append(w)
-        elif(post_select):
-            pass
-        else:
-            survivors.append(random.choice(prior).spawn())
+            if(randprob<=probedge): 
+                w.walk()
+                survivors.append(w)
+            elif(randprob <= probedge+probstay): 
+                survivors.append(w)
     
-    if (post_select):
-        ret = survivors
-        while(len(ret)<len(prior)):
-            ret.append(random.choice(survivors).spawn())
-        return ret
-        
-    return survivors 
+
+    return survivors
     
 
 def test(time,  num_walkers):    
