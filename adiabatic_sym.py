@@ -55,9 +55,14 @@ dist_writer = csv.writer(distfile)
 
 spike_size = args.spike_size
 spike_loc = args.spike_loc
-    
+
+stephen_b = 2/float(numpy.tan(2*numpy.arccos(1 - 1/float(n))))
+print(stephen_b)
+
 def main():
     T = args.T
+    
+    # These loops aren't typically used
     for time_counter in range(time_range):
         w=args.w
         while(w < 10*(n**2)):
@@ -97,42 +102,61 @@ def adiabaticWalk(total_walkers, total_vertices, time):
     for t in range(timesteps): # random walk loop
         s=t/float(timesteps) # adiabatic scheduling parameter
         if(s - s_old > .001): 
-#            print(s)
             output = [s]
             ll = histogram(walkers)[0].tolist()
             output.extend(ll)
             dist_writer.writerow(output)
             s_old += .001
-#            print(len(walkers))
- #       before_diffusion = walkers
         walkers = diffuse(walkers, s)
-#        if (len(walkers) < total_walkers/float(8)):
-#            while(len(walkers) < total_walkers): walkers.append(random.choice(before_diffusion).spawn())
+    
+    # sawtooth...
+#    q=0.01
+#    s_old = 0.000
+#    for m in my_range(q, 1, q):
+#        for t in my_range((m-20*q)*timesteps, timesteps, 1): # random walk loop
+#            s=t/float(timesteps) # adiabatic scheduling parameter
+#            if(s < 0): break
+#            if(s > 1): break
+#            if(s - s_old > .001): 
+#                output = [s]
+#                ll = histogram(walkers)[0].tolist()
+#                output.extend(ll)
+#                dist_writer.writerow(output)
+#                s_old += .001
+#            walkers = diffuse(walkers, s)
     return walkers
     
 
-def diffuse(prior, s):   
-    survivors = list()  
-    while (len(survivors) < tot_walkers):
-        random.shuffle(prior)
-        for w in prior:
-            w = w.spawn()
-
-            probedge = (1-s)*deltaT
-            probdead = s*potential(w.hw)*deltaT
-            probstay = 1- probdead - probedge
-        
-            randprob=random.random()        
-        
-            if(randprob<=probedge): 
-                w.walk()
-                survivors.append(w)
-            elif(randprob <= probedge+probstay): 
-                survivors.append(w)
+def diffuse(prior, s):
+    s = 1/float(2)   
+    survivors = list() 
+    av = 0.0
+    n = len(prior)
+    av = numpy.mean([potential(w.hw) for w in prior])
+    diff = -(tot_walkers - n)/float(n)
     
+    for w in prior:
+        pot = potential(w.hw) - av + diff
+        probedge = (1-s)*deltaT
+        probdead = s*abs(pot)*deltaT
+        probstay = 1- probdead - probedge
 
+        randprob=random.random()        
+
+        if(randprob<=probedge): 
+            w.walk()
+            survivors.append(w)
+        elif(randprob <= probedge+probstay): 
+            survivors.append(w)
+        elif(pot < 0):
+            survivors.append(w)
+            survivors.append(w.spawn())
     return survivors
     
+def my_range(start, end, step):
+    while start <= end:
+        yield start
+        start += step    
 
 def test(time,  num_walkers):    
     walkers = adiabaticWalk(num_walkers, n, time)
@@ -146,14 +170,11 @@ def hammingWeight(vertex):
         return gmpy.popcount(vertex)
         
 def potential(hamming_weight):
-    global curr_min
-    h=hamming_weight
-    if (h == spike_loc): return spike_size/float(n)
-#    return h/float(n)
-#    pot = h + numpy.log(n)*numpy.sin(h*numpy.pi*32/n)
-    pot = h/float(n)
-    if (pot < curr_min): curr_min = pot
-#    return pot/float(n)
+    # Birth/Death calculates probabilities based on 2W - 1 for W between 0 and 1. Need to return 2W instead of W.
+    if (hamming_weight == spike_loc): return 2*spike_size/float(n)
+    h= hamming_weight
+    pot = stephen_b*2*h/float(n)
+    #pot = h/float(n)
     return pot
 
 
